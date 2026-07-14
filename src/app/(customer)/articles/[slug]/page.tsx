@@ -6,6 +6,7 @@ import { ApiError } from '@/lib/api/client';
 import { safe, emptyPaginated } from '@/lib/safe';
 import { ArticleCard } from '@/components/ArticleCard';
 import { VideoCard } from '@/components/VideoCard';
+import { ArticleContent } from '@/components/ArticleContent';
 import type { Article, Video } from '@/lib/types';
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
@@ -60,12 +61,8 @@ export default async function ArticleDetailPage({ params }: { params: { slug: st
         )}
       </header>
 
-      {/* Content is trusted admin-authored rich HTML. */}
-      <div
-        className="article-content"
-        style={{ lineHeight: 1.8 }}
-        dangerouslySetInnerHTML={{ __html: article.content ?? '' }}
-      />
+      {/* Content is authored as Markdown (e.g. pasted from ChatGPT). */}
+      <ArticleContent content={article.content ?? ''} />
 
       {relatedArticles.items.length > 1 && (
         <section>
