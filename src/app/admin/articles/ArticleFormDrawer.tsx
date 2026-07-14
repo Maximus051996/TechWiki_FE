@@ -3,6 +3,8 @@
 import { memo, useEffect, useState } from 'react';
 import { Drawer } from '@/components/admin/Drawer';
 import { Field } from '@/components/admin/ui';
+import { RichTextEditor } from '@/components/admin/RichTextEditor';
+import { ArticleContent } from '@/components/ArticleContent';
 import type { Article, Category, Module, Status } from '@/lib/types';
 
 export interface ArticleFormValues {
@@ -49,10 +51,11 @@ function ArticleFormDrawerBase({
   onSubmit: (values: ArticleFormValues) => void;
 }) {
   const [form, setForm] = useState<ArticleFormValues>(EMPTY);
+  const [preview, setPreview] = useState(false);
 
   // Re-seed local state only when the drawer opens (or the target changes).
   useEffect(() => {
-    if (open) setForm(initial ?? EMPTY);
+    if (open) { setForm(initial ?? EMPTY); setPreview(false); }
   }, [open, initial]);
 
   const set = <K extends keyof ArticleFormValues>(key: K, value: ArticleFormValues[K]) =>
@@ -96,17 +99,31 @@ function ArticleFormDrawerBase({
           onChange={(e) => set('shortDescription', e.target.value)} placeholder="A one-line summary shown on cards" />
       </Field>
 
-      <Field label="Content" hint="Markdown supported — paste from ChatGPT, code blocks & diagrams keep formatting">
-        <textarea
-          className="textarea input-mono"
-          required
-          spellCheck={false}
-          style={{ minHeight: 260 }}
-          value={form.content}
-          onChange={(e) => set('content', e.target.value)}
-          placeholder={'## Introduction\n\nWrite in Markdown…\n\n```\nA---B\n```'}
-        />
-      </Field>
+      <div className="field">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+          <span className="field-label">Content</span>
+          <div className="rte-tabs">
+            <button type="button" className={`rte-tab${!preview ? ' active' : ''}`} onClick={() => setPreview(false)}>✎ Edit</button>
+            <button type="button" className={`rte-tab${preview ? ' active' : ''}`} onClick={() => setPreview(true)}>👁 Preview</button>
+          </div>
+        </div>
+        <span className="field-hint" style={{ marginBottom: 8 }}>
+          Paste from ChatGPT or any tool — formatting, code &amp; diagrams auto-adjust. Drag, paste or upload images.
+        </span>
+        {preview ? (
+          <div className="rte-preview">
+            {form.content?.trim()
+              ? <ArticleContent content={form.content} />
+              : <p className="muted" style={{ margin: 0 }}>Nothing to preview yet.</p>}
+          </div>
+        ) : (
+          <RichTextEditor
+            value={form.content}
+            onChange={(html) => set('content', html)}
+            placeholder="Write or paste your article here…"
+          />
+        )}
+      </div>
 
       <Field label="Tags" hint="Comma separated">
         <input className="input" value={form.tagsText}
