@@ -362,6 +362,12 @@ a {
   flex-wrap: wrap;
 }
 
+/* push any trailing meta (e.g. "N shown") to the far right */
+.toolbar>.muted:last-child {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
 /* Standard, attractive search field */
 .search-box {
   position: relative;
@@ -474,6 +480,13 @@ a {
   vertical-align: middle;
 }
 
+/* Compact, non-stretching columns for Module / Order / Status / Views */
+.data-table th:not(:first-child):not(:last-child),
+.data-table td:not(:first-child):not(:last-child) {
+  white-space: nowrap;
+  width: 1%;
+}
+
 .data-table tbody tr {
   transition: background 0.15s ease;
 }
@@ -489,11 +502,28 @@ a {
 .cell-title {
   font-weight: 600;
   color: var(--text);
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* Secondary line under a title (description) — clamp so rows stay even */
+.data-table td .muted {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 460px;
+  line-height: 1.45;
 }
 
 .cell-actions {
   text-align: right;
   white-space: nowrap;
+}
+
+/* Consistent action buttons alignment */
+.cell-actions .btn {
+  vertical-align: middle;
 }
 
 .row-thumb {
@@ -508,12 +538,19 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
+  line-height: 1.4;
   border: 1px solid transparent;
   text-transform: capitalize;
+  white-space: nowrap;
+  /* never wrap into an oval blob */
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
 }
 
 .badge::before {
