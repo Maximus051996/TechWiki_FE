@@ -2177,7 +2177,10 @@ a {
   font-size: 16px;
   overflow-wrap: anywhere;
 }
-.article-content > *:first-child { margin-top: 0; }
+
+.article-content>*:first-child {
+  margin-top: 0;
+}
 
 .article-content h1,
 .article-content h2,
@@ -2190,30 +2193,65 @@ a {
   margin: 1.6em 0 0.6em;
   scroll-margin-top: 90px;
 }
-.article-content h1 { font-size: 30px; }
+
+.article-content h1 {
+  font-size: 30px;
+}
+
 .article-content h2 {
   font-size: 24px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--border);
 }
-.article-content h3 { font-size: 20px; }
-.article-content h4 { font-size: 17px; }
 
-.article-content p { margin: 0 0 1.1em; }
+.article-content h3 {
+  font-size: 20px;
+}
 
-.article-content a { color: var(--primary-2); text-decoration: underline; text-underline-offset: 2px; }
-.article-content a:hover { color: #fff; }
+.article-content h4 {
+  font-size: 17px;
+}
+
+.article-content p {
+  margin: 0 0 1.1em;
+}
+
+.article-content a {
+  color: var(--primary-2);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.article-content a:hover {
+  color: #fff;
+}
 
 .article-content ul,
-.article-content ol { margin: 0 0 1.1em; padding-left: 1.5em; }
-.article-content li { margin: 0.35em 0; }
-.article-content li::marker { color: var(--primary-2); }
+.article-content ol {
+  margin: 0 0 1.1em;
+  padding-left: 1.5em;
+}
 
-.article-content strong { color: #fff; font-weight: 700; }
-.article-content em { color: #f5d0ec; }
+.article-content li {
+  margin: 0.35em 0;
+}
+
+.article-content li::marker {
+  color: var(--primary-2);
+}
+
+.article-content strong {
+  color: #fff;
+  font-weight: 700;
+}
+
+.article-content em {
+  color: #f5d0ec;
+}
 
 /* Inline code */
-.article-content :not(pre) > code {
+.article-content :not(pre)>code,
+.article-content .md-inline-code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.88em;
   background: rgba(226, 31, 158, 0.12);
@@ -2221,26 +2259,40 @@ a {
   color: #f9a8d4;
   padding: 2px 6px;
   border-radius: 6px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
-/* Code blocks + ASCII diagrams — preserve whitespace, scroll horizontally */
-.article-content pre {
+/* Code blocks + ASCII diagrams — preserve whitespace, scroll horizontally,
+   and NEVER overflow the container (the diagrams were spilling out before). */
+.article-content pre,
+.article-content .md-pre {
+  display: block;
+  max-width: 100%;
   background: #0c0f18;
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 16px 18px;
   overflow-x: auto;
+  overflow-y: hidden;
   margin: 0 0 1.3em;
   line-height: 1.5;
+  -webkit-overflow-scrolling: touch;
 }
-.article-content pre code {
+
+.article-content pre code,
+.article-content .md-pre code {
+  display: block;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 13.5px;
   color: #e2e8f0;
   white-space: pre;
+  /* keep ASCII art alignment; box scrolls if too wide */
+  tab-size: 2;
   background: none;
   border: none;
   padding: 0;
+  min-width: 0;
 }
 
 /* Blockquotes (Notes / Tips / Warnings) */
@@ -2252,7 +2304,10 @@ a {
   border-radius: 0 10px 10px 0;
   color: var(--text-muted);
 }
-.article-content blockquote p { margin: 0.3em 0; }
+
+.article-content blockquote p {
+  margin: 0.3em 0;
+}
 
 /* Tables */
 .article-content table {
@@ -2264,19 +2319,32 @@ a {
   border-radius: 10px;
   border: 1px solid var(--border);
 }
+
 .article-content th,
 .article-content td {
   padding: 10px 14px;
   border-bottom: 1px solid var(--border-soft);
   text-align: left;
 }
+
 .article-content thead th {
   background: var(--bg-elev);
   color: var(--text);
   font-weight: 700;
 }
-.article-content tbody tr:last-child td { border-bottom: none; }
 
-.article-content img { max-width: 100%; border-radius: 12px; margin: 0.4em 0 1.2em; }
+.article-content tbody tr:last-child td {
+  border-bottom: none;
+}
 
-.article-content hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
+.article-content img {
+  max-width: 100%;
+  border-radius: 12px;
+  margin: 0.4em 0 1.2em;
+}
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2em 0;
+}
