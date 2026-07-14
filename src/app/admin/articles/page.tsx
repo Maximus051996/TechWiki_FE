@@ -3,14 +3,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Protected } from '@/components/admin/Protected';
 import { AdminShell } from '@/components/admin/AdminShell';
-import { Drawer } from '@/components/admin/Drawer';
-import { Field, PageHead, RowActions, SearchInput, StatusBadge } from '@/components/admin/ui';
+import { PageHead, RowActions, SearchInput, StatusBadge } from '@/components/admin/ui';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/components/ui/Toast';
 import { useAuth } from '@/lib/auth';
 import { adminApi } from '@/lib/api/admin';
 import { ApiError } from '@/lib/api/client';
-import type { Article, Category, Module, Status } from '@/lib/types';
+import type { Article, Category, Module } from '@/lib/types';
+import { ArticleFormDrawer, articleToForm, type ArticleFormValues } from './ArticleFormDrawer';
 
 export default function AdminArticlesPage() {
   return (
@@ -22,19 +22,14 @@ export default function AdminArticlesPage() {
   );
 }
 
-const empty = {
-  title: '', moduleId: '', categoryId: '', shortDescription: '', content: '',
-  tags: [] as string[], status: 'draft' as Status, featured: false,
-};
-
 function ArticlesManager() {
   const { token } = useAuth();
   const { notify } = useToast();
   const [items, setItems] = useState<Article[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [form, setForm] = useState<Partial<Article> & { tagsText?: string }>(empty);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [initialForm, setInitialForm] = useState<ArticleFormValues | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -63,13 +58,12 @@ function ArticlesManager() {
 
   useEffect(() => { load(); }, [load]);
 
-  const catsForModule = categories.filter((c) => c.moduleId === form.moduleId);
   const catName = (id: string) => categories.find((c) => c.id === id)?.name ?? '—';
   const filtered = items.filter((a) => a.title.toLowerCase().includes(q.toLowerCase()));
 
   function openCreate() {
     setEditingId(null);
-    setForm(empty);
+    setInitialForm(null);
     setDrawerOpen(true);
   }
 
@@ -78,26 +72,25 @@ function ArticlesManager() {
     try {
       const full = await adminApi.articles.get(token, a.id);
       setEditingId(a.id);
-      setForm({
-        title: full.title, moduleId: full.moduleId, categoryId: full.categoryId,
-        shortDescription: full.shortDescription, content: full.content, status: full.status,
-        featured: full.featured, tagsText: full.tags.join(', '),
-      });
+      setInitialForm(articleToForm(full));
       setDrawerOpen(true);
     } catch {
       notify('Failed to load article', 'error');
     }
   }
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit(values: ArticleFormValues) {
     if (!token) return;
     setSaving(true);
     const payload: Partial<Article> = {
-      title: form.title, moduleId: form.moduleId, categoryId: form.categoryId,
-      shortDescription: form.shortDescription, content: form.content,
-      status: form.status, featured: form.featured,
-      tags: (form.tagsText ?? '').split(',').map((t) => t.trim()).filter(Boolean),
+      title: values.title,
+      moduleId: values.moduleId,
+      categoryId: values.categoryId,
+      shortDescription: values.shortDescription,
+      content: values.content,
+      status: values.status,
+      featured: values.featured,
+      tags: values.tagsText.split(',').map((t) => t.trim()).filter(Boolean),
     };
     try {
       if (editingId) {
@@ -178,56 +171,16 @@ function ArticlesManager() {
         </div>
       </div>
 
-      <Drawer
+      <ArticleFormDrawer
         open={drawerOpen}
-        title={editingId ? 'Edit Article' : 'New Article'}
+        editing={!!editingId}
+        initial={initialForm}
+        modules={modules}
+        categories={categories}
+        saving={saving}
         onClose={() => setDrawerOpen(false)}
-        onSubmit={onSubmit}
-        submitting={saving}
-        submitLabel={editingId ? 'Update Article' : 'Create Article'}
-      >
-        <Field label="Title">
-          <input className="input" required value={form.title ?? ''} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="An engaging article title" />
-        </Field>
-        <div className="form-row">
-          <Field label="Module">
-            <select className="select" required value={form.moduleId} onChange={(e) => setForm({ ...form, moduleId: e.target.value, categoryId: '' })}>
-              <option value="">Select module…</option>
-              {modules.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-            </select>
-          </Field>
-          <Field label="Category">
-            <select className="select" required value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })} disabled={!form.moduleId}>
-              <option value="">Select category…</option>
-              {catsForModule.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </Field>
-        </div>
-        <Field label="Short description">
-          <input className="input" value={form.shortDescription ?? ''} onChange={(e) => setForm({ ...form, shortDescription: e.target.value })} placeholder="A one-line summary shown on cards" />
-        </Field>
-        <Field label="Content" hint="HTML or markdown supported">
-          <textarea className="textarea input-mono" required style={{ minHeight: 180 }} value={form.content ?? ''} onChange={(e) => setForm({ ...form, content: e.target.value })} placeholder="<h2>Introduction</h2><p>…</p>" />
-        </Field>
-        <Field label="Tags" hint="Comma separated">
-          <input className="input" value={form.tagsText ?? ''} onChange={(e) => setForm({ ...form, tagsText: e.target.value })} placeholder="javascript, nodejs, tutorial" />
-        </Field>
-        <div className="form-row">
-          <Field label="Status">
-            <select className="select" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as Status })}>
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-              <option value="archived">Archived</option>
-            </select>
-          </Field>
-          <Field label="Visibility">
-            <label className="check">
-              <input type="checkbox" checked={!!form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} />
-              <span>⭐ Featured</span>
-            </label>
-          </Field>
-        </div>
-      </Drawer>
+        onSubmit={handleSubmit}
+      />
 
       <ConfirmDialog
         open={!!toDelete}
