@@ -37,26 +37,32 @@ function ArticlesManager() {
   const [toDelete, setToDelete] = useState<Article | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     if (!token) return;
     setLoading(true);
     try {
       const [arts, mods, cats] = await Promise.all([
-        adminApi.articles.list(token, { limit: 100 }),
-        adminApi.modules.list(token, { limit: 200 }),
-        adminApi.categories.list(token, { limit: 200 }),
+        adminApi.articles.list(token, { limit: 100 }, { signal }),
+        adminApi.modules.list(token, { limit: 200 }, { signal }),
+        adminApi.categories.list(token, { limit: 200 }, { signal }),
       ]);
+      if (signal?.aborted) return;
       setItems(arts.items);
       setModules(mods.items);
       setCategories(cats.items);
     } catch (err) {
+      if (signal?.aborted) return;
       notify(err instanceof ApiError ? err.message : 'Failed to load', 'error');
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, [token, notify]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const controller = new AbortController();
+    void load(controller.signal);
+    return () => controller.abort();
+  }, [load]);
 
   const catName = (id: string) => categories.find((c) => c.id === id)?.name ?? '—';
   const filtered = items.filter((a) => a.title.toLowerCase().includes(q.toLowerCase()));

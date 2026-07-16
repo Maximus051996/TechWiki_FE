@@ -23,13 +23,19 @@ export function InitialSplash() {
 
     const start = Date.now();
     const MIN_MS = 1100;
+    let leavingTimer: number | undefined;
+    let hideTimer: number | undefined;
+    let disposed = false;
 
     const finish = () => {
+      if (disposed) return;
       const elapsed = Date.now() - start;
       const wait = Math.max(0, MIN_MS - elapsed);
-      window.setTimeout(() => {
+      leavingTimer = window.setTimeout(() => {
+        if (disposed) return;
         setLeaving(true);
-        window.setTimeout(() => {
+        hideTimer = window.setTimeout(() => {
+          if (disposed) return;
           setShow(false);
           sessionStorage.setItem('tw_splash_shown', '1');
         }, 450);
@@ -39,7 +45,12 @@ export function InitialSplash() {
     if (document.readyState === 'complete') finish();
     else window.addEventListener('load', finish, { once: true });
 
-    return () => window.removeEventListener('load', finish);
+    return () => {
+      disposed = true;
+      window.removeEventListener('load', finish);
+      if (leavingTimer) window.clearTimeout(leavingTimer);
+      if (hideTimer) window.clearTimeout(hideTimer);
+    };
   }, []);
 
   if (!show) return null;

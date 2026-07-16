@@ -52,7 +52,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           {NAV.map(({ href, label, Icon }) => {
             const active = href === '/admin' ? pathname === '/admin' : pathname.startsWith(href);
             return (
-              <Link key={href} href={href} className={`nav-item${active ? ' active' : ''}`}>
+              <Link key={href} href={href} title={label} className={`nav-item${active ? ' active' : ''}`}>
                 <span className="nav-ico"><Icon size={20} /></span>
                 <span className="nav-label">{label}</span>
               </Link>
@@ -86,7 +86,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </button>
           </div>
         </header>
-        <main style={{ padding: 28, minWidth: 0 }}>{children}</main>
+        <main className="admin-content">{children}</main>
       </div>
     </div>
   );

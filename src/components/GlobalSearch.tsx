@@ -26,18 +26,20 @@ export function GlobalSearch() {
     }
     setLoading(true);
     const controller = new AbortController();
+    let active = true;
     const t = setTimeout(async () => {
       try {
-        const data = await publicApi.search(term, 8);
-        setResult(data);
+        const data = await publicApi.search(term, 8, { signal: controller.signal });
+        if (active) setResult(data);
       } catch {
-        setResult(null);
+        if (active && !controller.signal.aborted) setResult(null);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     }, 250);
 
     return () => {
+      active = false;
       clearTimeout(t);
       controller.abort();
     };
@@ -54,27 +56,18 @@ export function GlobalSearch() {
   const hasResults = result && result.total > 0;
 
   return (
-    <div ref={boxRef} style={{ position: 'relative', flex: 1, maxWidth: 560 }}>
+    <div ref={boxRef} className="global-search">
       <input
         value={q}
         onChange={(e) => setQ(e.target.value)}
         onFocus={() => setOpen(true)}
         placeholder="Search modules, categories, articles, videos…"
         aria-label="Global search"
-        style={{
-          width: '100%', padding: '11px 16px', borderRadius: 12,
-          border: '1px solid var(--border)', background: 'var(--bg-elev)',
-          color: 'var(--text)', outline: 'none',
-        }}
+        className="global-search-input"
       />
       {open && q.trim().length >= 2 && (
         <div
-          className="fade-in"
-          style={{
-            position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0, zIndex: 50,
-            background: 'var(--bg-card)', border: '1px solid var(--border)',
-            borderRadius: 12, boxShadow: 'var(--shadow)', padding: 12, maxHeight: 420, overflowY: 'auto',
-          }}
+          className="global-search-results fade-in"
         >
           {loading && <p className="muted" style={{ margin: 8 }}>Searching…</p>}
           {!loading && !hasResults && <p className="muted" style={{ margin: 8 }}>No results found.</p>}
@@ -95,13 +88,12 @@ export function GlobalSearch() {
 function SearchGroup({ label, items }: { label: string; items: { href: string; label: string }[] }) {
   if (items.length === 0) return null;
   return (
-    <div style={{ marginBottom: 10 }}>
-      <div className="muted" style={{ fontSize: 12, textTransform: 'uppercase', margin: '6px 8px' }}>{label}</div>
+    <div className="search-group">
+      <div className="search-group-label">{label}</div>
       {items.map((it) => (
         <Link
           key={it.href}
           href={it.href}
-          style={{ display: 'block', padding: '8px 10px', borderRadius: 8 }}
           className="search-item"
         >
           {it.label}

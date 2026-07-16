@@ -1,4 +1,5 @@
 import { api } from './client';
+import type { RequestOptions } from './client';
 import type { Article, Category, Module, Paginated, SearchResult, Video } from '../types';
 
 /**
@@ -40,6 +41,6 @@ export const publicApi = {
   video: (id: string) =>
     api.get<Video>(`/api/public/videos/${id}`, { next: { revalidate: 30 } }),
 
-  search: (q: string, limit = 10) =>
-    api.get<SearchResult>(`/api/public/search${qs({ q, limit })}`, { cache: 'no-store' }),
+  search: (q: string, limit = 10, options?: Pick<RequestOptions, 'signal'>) =>
+    api.get<SearchResult>(`/api/public/search${qs({ q, limit })}`, { cache: 'no-store', ...options }),
 };

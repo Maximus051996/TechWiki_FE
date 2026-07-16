@@ -38,24 +38,30 @@ function CategoriesManager() {
   const [toDelete, setToDelete] = useState<Category | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     if (!token) return;
     setLoading(true);
     try {
       const [cats, mods] = await Promise.all([
-        adminApi.categories.list(token, { limit: 200 }),
-        adminApi.modules.list(token, { limit: 200 }),
+        adminApi.categories.list(token, { limit: 200 }, { signal }),
+        adminApi.modules.list(token, { limit: 200 }, { signal }),
       ]);
+      if (signal?.aborted) return;
       setItems(cats.items);
       setModules(mods.items);
     } catch (err) {
+      if (signal?.aborted) return;
       notify(err instanceof ApiError ? err.message : 'Failed to load', 'error');
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, [token, notify]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const controller = new AbortController();
+    void load(controller.signal);
+    return () => controller.abort();
+  }, [load]);
 
   const moduleName = (id: string) => modules.find((m) => m.id === id)?.name ?? '—';
   const filtered = items.filter((c) => c.name.toLowerCase().includes(q.toLowerCase()));

@@ -37,22 +37,28 @@ function ModulesManager() {
   const [toDelete, setToDelete] = useState<Module | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     if (!token) return;
     setLoading(true);
     try {
-      const data = await adminApi.modules.list(token, { q, limit: 100 });
+      const data = await adminApi.modules.list(token, { q, limit: 100 }, { signal });
+      if (signal?.aborted) return;
       setItems(data.items);
     } catch (err) {
+      if (signal?.aborted) return;
       notify(err instanceof ApiError ? err.message : 'Failed to load', 'error');
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, [token, q, notify]);
 
   useEffect(() => {
-    const t = setTimeout(load, 250);
-    return () => clearTimeout(t);
+    const controller = new AbortController();
+    const t = setTimeout(() => void load(controller.signal), 250);
+    return () => {
+      clearTimeout(t);
+      controller.abort();
+    };
   }, [load]);
 
   function openCreate() {

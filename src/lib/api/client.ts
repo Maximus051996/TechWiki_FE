@@ -21,7 +21,7 @@ interface Envelope<T> {
   error?: { code: string; message: string; details?: unknown };
 }
 
-interface RequestOptions extends RequestInit {
+export interface RequestOptions extends RequestInit {
   token?: string | null;
   // Next.js fetch caching controls (used for ISR on the customer portal).
   next?: { revalidate?: number; tags?: string[] };

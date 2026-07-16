@@ -34,18 +34,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       return;
     }
-    const { token: saved } = JSON.parse(raw) as { token: string };
+
+    let saved: string;
+    try {
+      saved = (JSON.parse(raw) as { token?: string }).token ?? '';
+      if (!saved) throw new Error('Missing token');
+    } catch {
+      localStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem(STORAGE_KEY);
+      setLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    let active = true;
     adminApi
-      .me(saved)
+      .me(saved, { signal: controller.signal })
       .then((res) => {
+        if (!active) return;
         setUser(res.user);
         setToken(saved);
       })
       .catch(() => {
+        if (!active || controller.signal.aborted) return;
         localStorage.removeItem(STORAGE_KEY);
         sessionStorage.removeItem(STORAGE_KEY);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
   }, []);
 
   const login = useCallback(

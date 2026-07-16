@@ -19,17 +19,11 @@ export default async function HomePage() {
   return (
     <div className="fade-in" style={{ display: 'grid', gap: 48 }}>
       {/* Hero */}
-      <section
-        style={{
-          textAlign: 'center', padding: '56px 20px', borderRadius: 20,
-          background: 'linear-gradient(135deg, rgba(109,94,252,.18), rgba(34,211,238,.12))',
-          border: '1px solid var(--border)',
-        }}
-      >
-        <h1 style={{ fontSize: 44, margin: '0 0 12px', lineHeight: 1.1 }}>
+      <section className="home-hero">
+        <h1 className="home-hero-title">
           The technology knowledge base for builders
         </h1>
-        <p className="muted" style={{ fontSize: 18, maxWidth: 620, margin: '0 auto 24px' }}>
+        <p className="muted home-hero-copy">
           Browse curated technical articles and videos, organized by modules and categories.
         </p>
         <Link href="/modules" className="btn btn-primary">Explore Modules →</Link>

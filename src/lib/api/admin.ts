@@ -1,4 +1,5 @@
 import { api } from './client';
+import type { RequestOptions } from './client';
 import type {
   Article, AuthUser, Category, DashboardSummary, Module, Paginated, SearchResult, Video,
   Visitor, VisitorStats,
@@ -8,6 +9,7 @@ import type {
  * Admin Portal API surface — authenticated, full CRUD. Every call takes a token.
  */
 type Params = Record<string, string | number | boolean | undefined>;
+type ApiOptions = Pick<RequestOptions, 'signal'>;
 
 function qs(params: Params = {}) {
   const sp = new URLSearchParams();
@@ -26,20 +28,20 @@ export const adminApi = {
       '/api/admin/auth/login',
       { email, password, remember }
     ),
-  me: (token: string) => api.get<{ user: AuthUser }>('/api/admin/auth/me', { token, ...noStore }),
-  dashboard: (token: string) => api.get<DashboardSummary>('/api/admin/dashboard', { token, ...noStore }),
+  me: (token: string, options?: ApiOptions) => api.get<{ user: AuthUser }>('/api/admin/auth/me', { token, ...noStore, ...options }),
+  dashboard: (token: string, options?: ApiOptions) => api.get<DashboardSummary>('/api/admin/dashboard', { token, ...noStore, ...options }),
 
   visitors: {
-    list: (token: string, params?: Params) =>
-      api.get<Paginated<Visitor>>(`/api/admin/visitors${qs(params)}`, { token, ...noStore }),
-    stats: (token: string) => api.get<VisitorStats>('/api/admin/visitors/stats', { token, ...noStore }),
+    list: (token: string, params?: Params, options?: ApiOptions) =>
+      api.get<Paginated<Visitor>>(`/api/admin/visitors${qs(params)}`, { token, ...noStore, ...options }),
+    stats: (token: string, options?: ApiOptions) => api.get<VisitorStats>('/api/admin/visitors/stats', { token, ...noStore, ...options }),
   },
   search: (token: string, q: string) =>
     api.get<SearchResult>(`/api/admin/search${qs({ q })}`, { token, ...noStore }),
 
   modules: {
-    list: (token: string, params?: Params) =>
-      api.get<Paginated<Module>>(`/api/admin/modules${qs(params)}`, { token, ...noStore }),
+    list: (token: string, params?: Params, options?: ApiOptions) =>
+      api.get<Paginated<Module>>(`/api/admin/modules${qs(params)}`, { token, ...noStore, ...options }),
     get: (token: string, id: string) => api.get<Module>(`/api/admin/modules/${id}`, { token, ...noStore }),
     create: (token: string, data: Partial<Module>) => api.post<Module>('/api/admin/modules', data, { token }),
     update: (token: string, id: string, data: Partial<Module>) =>
@@ -48,8 +50,8 @@ export const adminApi = {
   },
 
   categories: {
-    list: (token: string, params?: Params) =>
-      api.get<Paginated<Category>>(`/api/admin/categories${qs(params)}`, { token, ...noStore }),
+    list: (token: string, params?: Params, options?: ApiOptions) =>
+      api.get<Paginated<Category>>(`/api/admin/categories${qs(params)}`, { token, ...noStore, ...options }),
     create: (token: string, data: Partial<Category>) => api.post<Category>('/api/admin/categories', data, { token }),
     update: (token: string, id: string, data: Partial<Category>) =>
       api.put<Category>(`/api/admin/categories/${id}`, data, { token }),
@@ -57,8 +59,8 @@ export const adminApi = {
   },
 
   articles: {
-    list: (token: string, params?: Params) =>
-      api.get<Paginated<Article>>(`/api/admin/articles${qs(params)}`, { token, ...noStore }),
+    list: (token: string, params?: Params, options?: ApiOptions) =>
+      api.get<Paginated<Article>>(`/api/admin/articles${qs(params)}`, { token, ...noStore, ...options }),
     get: (token: string, id: string) => api.get<Article>(`/api/admin/articles/${id}`, { token, ...noStore }),
     create: (token: string, data: Partial<Article>) => api.post<Article>('/api/admin/articles', data, { token }),
     update: (token: string, id: string, data: Partial<Article>) =>
@@ -67,8 +69,8 @@ export const adminApi = {
   },
 
   videos: {
-    list: (token: string, params?: Params) =>
-      api.get<Paginated<Video>>(`/api/admin/videos${qs(params)}`, { token, ...noStore }),
+    list: (token: string, params?: Params, options?: ApiOptions) =>
+      api.get<Paginated<Video>>(`/api/admin/videos${qs(params)}`, { token, ...noStore, ...options }),
     create: (token: string, data: Partial<Video>) => api.post<Video>('/api/admin/videos', data, { token }),
     update: (token: string, id: string, data: Partial<Video>) =>
       api.put<Video>(`/api/admin/videos/${id}`, data, { token }),

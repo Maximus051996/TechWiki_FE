@@ -29,25 +29,31 @@ function VisitorsLog() {
   const [loading, setLoading] = useState(true);
   const limit = 50;
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     if (!token) return;
     setLoading(true);
     try {
       const [log, s] = await Promise.all([
-        adminApi.visitors.list(token, { page, limit }),
-        adminApi.visitors.stats(token),
+        adminApi.visitors.list(token, { page, limit }, { signal }),
+        adminApi.visitors.stats(token, { signal }),
       ]);
+      if (signal?.aborted) return;
       setItems(log.items);
       setTotal(log.pagination.total);
       setStats(s);
     } catch (err) {
+      if (signal?.aborted) return;
       notify(err instanceof ApiError ? err.message : 'Failed to load visitors', 'error');
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, [token, page, notify]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const controller = new AbortController();
+    void load(controller.signal);
+    return () => controller.abort();
+  }, [load]);
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const fmt = (d: string) => new Date(d).toLocaleString();

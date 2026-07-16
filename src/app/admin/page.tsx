@@ -24,13 +24,18 @@ function DashboardContent() {
 
   useEffect(() => {
     if (!token) return;
+    const controller = new AbortController();
     let active = true;
     adminApi
-      .dashboard(token)
+      .dashboard(token, { signal: controller.signal })
       .then((d) => active && setData(d))
+      .catch(() => {
+        // The dashboard can unmount during navigation; aborted requests need no UI update.
+      })
       .finally(() => active && setLoading(false));
     return () => {
       active = false;
+      controller.abort();
     };
   }, [token]);
 
